@@ -264,6 +264,9 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | extcodesize(a)          |     | F | size of the code at address a                                   |
 +-------------------------+-----+---+-----------------------------------------------------------------+
+| extcodehash(a)          |     | F | keccak-256 hash of the code at address a or 0 if the account    |
+|                         |     |   | does not exist                                                  |
++-------------------------+-----+---+-----------------------------------------------------------------+
 | extcodecopy(a, t, f, s) | `-` | F | like codecopy(t, f, s) but take code at address a               |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | returndatasize          |     | B | size of the last returndata                                     |

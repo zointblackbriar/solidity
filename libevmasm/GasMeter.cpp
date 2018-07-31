@@ -184,6 +184,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				gas += GasCosts::expByteGas(m_evmVersion) * 32;
 			break;
 		case Instruction::BALANCE:
+		case Instruction::EXTCODEHASH:
 			gas = GasCosts::balanceGas(m_evmVersion);
 			break;
 		default:

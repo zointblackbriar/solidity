@@ -788,6 +788,18 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", Warning, "The \"sar\" instruction is only available for Constantinople-compatible VMs.");
 }
 
+BOOST_AUTO_TEST_CASE(extcodehash)
+{
+	BOOST_CHECK(successAssemble("{ pop(extcodehash(10)) }"));
+}
+
+BOOST_AUTO_TEST_CASE(extcodehash_constantinople_warning)
+{
+	if (dev::test::Options::get().evmVersion().hasExtcodehash())
+		return;
+	CHECK_PARSE_WARNING("{ pop(extcodehash(10)) }", Warning, "The \"extcodehash\" instruction is only available for Constantinople-compatible VMs.");
+	}
+
 BOOST_AUTO_TEST_CASE(jump_warning)
 {
 	CHECK_PARSE_WARNING("{ 1 jump }", Warning, "Jump instructions");
