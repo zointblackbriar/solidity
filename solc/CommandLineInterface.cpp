@@ -566,7 +566,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				addStdin = true;
 			else
 			{
-				auto infile = boost::filesystem::path(path);
+				auto const infile = m_basePath / path;
 				if (!boost::filesystem::exists(infile))
 				{
 					if (!ignoreMissing)
@@ -1058,6 +1058,8 @@ bool CommandLineInterface::processInput()
 	{
 		try
 		{
+			sout() << "Requested path: " << _path << "\n";
+
 			if (_kind != ReadCallback::kindString(ReadCallback::Kind::ReadFile))
 				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
 					"ReadFile callback used as callback kind " +
@@ -1084,6 +1086,8 @@ bool CommandLineInterface::processInput()
 			}
 			if (!isAllowed)
 				return ReadCallback::Result{false, "File outside of allowed directories."};
+
+			sout() << "Canonical path: " << canonicalPath.string() << "\n";
 
 			if (!boost::filesystem::exists(canonicalPath))
 				return ReadCallback::Result{false, "File not found."};
