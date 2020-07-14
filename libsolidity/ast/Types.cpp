@@ -3142,7 +3142,10 @@ string FunctionType::toString(bool _short) const
 	case Kind::Declaration:
 	case Kind::Internal:
 	case Kind::External:
-		name = "function ";
+		if (bound())
+			name = "bound function ";
+		else
+			name = "function ";
 		break;
 	default:
 		return "builtin " + to_string(m_kind);
