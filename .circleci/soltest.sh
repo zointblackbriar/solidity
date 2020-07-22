@@ -54,8 +54,11 @@ get_logfile_basename() {
     echo -ne "${filename}"
 }
 
+# run tests against hera ewasm evmc vm, only if OPTIMIZE == 0 and evm version is byzantium
+[ "${EVM}" = "byzantium" ] && [ "${OPTIMIZE}" = "0" ] && EWASM_ARGS="--ewasm"
+
 BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/`get_logfile_basename`.xml ${BOOST_TEST_ARGS}"
-SOLTEST_ARGS="--evm-version=$EVM $SOLTEST_FLAGS"
+SOLTEST_ARGS="--evm-version=$EVM $SOLTEST_FLAGS $EWASM_ARGS"
 test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
 test "${ABI_ENCODER_V2}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv2"
 
