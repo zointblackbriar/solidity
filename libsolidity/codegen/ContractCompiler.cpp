@@ -1251,12 +1251,16 @@ bool ContractCompiler::visit(PlaceholderStatement const& _placeholderStatement)
 
 bool ContractCompiler::visit(Block const& _block)
 {
+	if (_block.unchecked())
+		m_context.pushArithmetic(Arithmetic::Wrapping);
 	storeStackHeight(&_block);
 	return true;
 }
 
 void ContractCompiler::endVisit(Block const& _block)
 {
+	if (_block.unchecked())
+		m_context.popArithmetic();
 	// Frees local variables declared in the scope of this block.
 	popScopedVariables(&_block);
 }
@@ -1324,6 +1328,8 @@ void ContractCompiler::appendModifierOrFunctionCode()
 
 	if (codeBlock)
 	{
+		m_context.pushArithmetic(Arithmetic::Checked);
+
 		std::set<ExperimentalFeature> experimentalFeaturesOutside = m_context.experimentalFeaturesActive();
 		m_context.setExperimentalFeatures(codeBlock->sourceUnit().annotation().experimentalFeatures);
 
@@ -1339,6 +1345,8 @@ void ContractCompiler::appendModifierOrFunctionCode()
 		CompilerUtils(m_context).popStackSlots(stackSurplus);
 		for (auto var: addedVariables)
 			m_context.removeVariable(*var);
+
+		m_context.popArithmetic();
 	}
 	m_modifierDepth--;
 	m_context.setModifierDepth(m_modifierDepth);
