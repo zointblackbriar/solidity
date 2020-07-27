@@ -487,6 +487,21 @@ void CHC::endVisit(Continue const& _continue)
 	m_currentBlock = predicate(*continueGhost);
 }
 
+void CHC::endVisit(Return const& _return)
+{
+	SMTEncoder::endVisit(_return);
+
+	solAssert(m_currentContract, "");
+	solAssert(m_currentFunction, "");
+	connectBlocks(
+		m_currentBlock,
+		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction)
+	);
+
+	auto returnGhost = createBlock(&_return, "return_ghost_");
+	m_currentBlock = predicate(*returnGhost);
+}
+
 void CHC::visitAssert(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();

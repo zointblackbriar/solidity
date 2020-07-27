@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Support early returns in the CHC engine.
 
 
 Bugfixes:

@@ -78,6 +78,7 @@ private:
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Break const& _node) override;
 	void endVisit(Continue const& _node) override;
+	void endVisit(Return const& _node) override;
 
 	void visitAssert(FunctionCall const& _funCall);
 	void internalFunctionCall(FunctionCall const& _funCall);
