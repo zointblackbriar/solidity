@@ -1,5 +1,7 @@
 ### 0.8.0 (unreleased)
 
+Language Features:
+ * Yul: Disallow the use of reserved identifiers, such as EVM instructions, even if they are not available in the given dialect / EVM version.
 
 
 ### 0.7.2 (unreleased)
