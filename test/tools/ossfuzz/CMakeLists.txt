@@ -27,6 +27,7 @@ if (OSSFUZZ)
             solc_opt_ossfuzz.cpp
             ../fuzzer_common.cpp
             ../../TestCaseReader.cpp
+	    yulFuzzerCommon.cpp
             SolidityLexer.cpp
             SolidityParser.cpp
     )
@@ -35,13 +36,14 @@ if (OSSFUZZ)
             ${COMPILE_OPTIONS} -Wno-extra-semi -Wno-unused-parameter
     )
     target_include_directories(solc_opt_ossfuzz PRIVATE /usr/include/antlr4-runtime)
-    target_link_libraries(solc_opt_ossfuzz PRIVATE libsolc evmasm antlr4-runtime)
+    target_link_libraries(solc_opt_ossfuzz PRIVATE libsolc evmasm yul yulInterpreter antlr4-runtime)
     set_target_properties(solc_opt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(solc_noopt_ossfuzz
             solc_noopt_ossfuzz.cpp
             ../fuzzer_common.cpp
             ../../TestCaseReader.cpp
+	    yulFuzzerCommon.cpp
             SolidityLexer.cpp
             SolidityParser.cpp
     )
@@ -50,7 +52,7 @@ if (OSSFUZZ)
             ${COMPILE_OPTIONS} -Wno-extra-semi -Wno-unused-parameter
     )
     target_include_directories(solc_noopt_ossfuzz PRIVATE /usr/include/antlr4-runtime)
-    target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm antlr4-runtime)
+    target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm yul yulInterpreter antlr4-runtime)
     set_target_properties(solc_noopt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(const_opt_ossfuzz const_opt_ossfuzz.cpp ../fuzzer_common.cpp)

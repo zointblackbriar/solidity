@@ -18,6 +18,7 @@
 
 #include <libsolutil/Common.h>
 
+#include <liblangutil/EVMVersion.h>
 #include <map>
 #include <string>
 
@@ -36,4 +37,5 @@ struct FuzzerUtil
 	/// (off otherwise) and a pseudo-random @param _rand that selects the EVM
 	/// version to be compiled for.
 	static void testCompiler(solidity::StringMap const& _input, bool _optimize, unsigned _rand);
+	static void yulIRDiff(solidity::langutil::EVMVersion _version, std::string const& _ir, std::string const& _irOpt);
 };

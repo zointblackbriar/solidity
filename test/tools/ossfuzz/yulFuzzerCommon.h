@@ -38,7 +38,7 @@ struct yulFuzzerUtil
 		size_t _maxSteps = maxSteps,
 		size_t _maxTraceSize = maxTraceSize
 	);
-	static size_t constexpr maxSteps = 100;
+	static size_t constexpr maxSteps = 10000000;
 	static size_t constexpr maxTraceSize = 75;
 };
 
