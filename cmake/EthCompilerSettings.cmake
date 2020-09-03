@@ -205,6 +205,7 @@ endif()
 # SMT Solvers integration
 option(USE_Z3 "Allow compiling with Z3 SMT solver integration" ON)
 option(USE_CVC4 "Allow compiling with CVC4 SMT solver integration" ON)
+option(USE_OSMT2 "Allow compiling with OpenSMT2 SMT solver integration" ON)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	option(USE_LD_GOLD "Use GNU gold linker" ON)

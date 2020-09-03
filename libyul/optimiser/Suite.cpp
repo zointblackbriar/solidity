@@ -56,6 +56,7 @@
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/Metrics.h>
+#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -180,6 +181,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			LiteralRematerialiser,
 			LoadResolver,
 			LoopInvariantCodeMotion,
+			ReasoningBasedSimplifier,
 			RedundantAssignEliminator,
 			Rematerialiser,
 			SSAReverser,
@@ -216,6 +218,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{LiteralRematerialiser::name,         'T'},
 		{LoadResolver::name,                  'L'},
 		{LoopInvariantCodeMotion::name,       'M'},
+		{ReasoningBasedSimplifier::name,      'R'},
 		{RedundantAssignEliminator::name,     'r'},
 		{Rematerialiser::name,                'm'},
 		{SSAReverser::name,                   'V'},

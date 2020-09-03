@@ -23,7 +23,13 @@ else()
   set(cvc4_SRCS)
 endif()
 
-add_library(smtutil ${sources} ${z3_SRCS} ${cvc4_SRCS})
+if (${OSMT2_FOUND})
+  set(osmt2_SRCS OpenSMT2Interface.cpp OpenSMT2Interface.h)
+else()
+  set(osmt2_SRCS)
+endif()
+
+add_library(smtutil ${sources} ${z3_SRCS} ${cvc4_SRCS} ${osmt2_SRCS})
 target_link_libraries(smtutil PUBLIC solutil Boost::boost)
 
 if (${Z3_FOUND})
@@ -32,4 +38,8 @@ endif()
 
 if (${CVC4_FOUND})
   target_link_libraries(smtutil PUBLIC CVC4::CVC4)
+endif()
+
+if (${OSMT2_FOUND})
+  target_link_libraries(smtutil PUBLIC OSMT2::OSMT2)
 endif()
