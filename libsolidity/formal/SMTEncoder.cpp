@@ -787,13 +787,17 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 		defineExpr(_funCall, expr(*argument));
 	else
 	{
+		bool supportComplete = false;
 		m_context.setUnknownValue(*m_context.expression(_funCall));
 		auto const& funCallCategory = _funCall.annotation().type->category();
 		// TODO: truncating and bytesX needs a different approach because of right padding.
 		if (funCallCategory == Type::Category::Integer || funCallCategory == Type::Category::Address)
 		{
 			if (argSize < castSize)
+			{
 				defineExpr(_funCall, expr(*argument));
+				supportComplete = true;
+			}
 			else
 			{
 				auto const& intType = dynamic_cast<IntegerType const&>(*m_context.expression(_funCall)->type());
@@ -805,11 +809,12 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 			}
 		}
 
-		m_errorReporter.warning(
-			5084_error,
-			_funCall.location(),
-			"Type conversion is not yet fully supported and might yield false positives."
-		);
+		if (!supportComplete)
+			m_errorReporter.warning(
+				5084_error,
+				_funCall.location(),
+				"Type conversion is not yet fully supported and might yield false positives."
+			);
 	}
 }
 
