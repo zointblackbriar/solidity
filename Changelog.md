@@ -1,5 +1,8 @@
 ### 0.7.3 (unreleased)
 
+Language Features:
+ * Support ``address(..).codehash`` to retrieve the code hash of an account.
+
 Compiler Features:
  * SMTChecker: Support ``addmod`` and ``mulmod``.
  * SMTChecker: Support array slices.
@@ -17,7 +20,6 @@ Bugfixes:
 
 Important Bugfixes:
  * Type Checker: Disallow two or more free functions with identical name (potentially imported and aliased) and parameter types.
-
 
 Compiler Features:
  * Export compiler-generated utility sources via standard-json or combined-json.
