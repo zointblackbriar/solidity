@@ -959,8 +959,10 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
-	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "...");
+
+	if (_type.isByteArray())
+		return resizeDynamicByteArrayFunction(_type);
 
 	string functionName = "resize_array_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
@@ -1002,6 +1004,152 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 			("itemsPerSlot", to_string(32 / _type.baseType()->storageBytes()))
 			("storageBytes", to_string(_type.baseType()->storageBytes()))
 			("partialClearStorageSlot", partialClearStorageSlotFunction())
+			.render();
+	});
+}
+
+string YulUtilFunctions::resizeDynamicByteArrayFunction(ArrayType const& _type)
+{
+	string functionName = "resize_array_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, newLen) {
+				if gt(newLen, <maxArrayLength>) {
+					<panic>()
+				}
+
+				let oldLen := <fetchLength>(array)
+
+				if gt(newLen, oldLen) {
+					<increaseSize>(array, oldLen, newLen)
+				}
+
+				if lt(newLen, oldLen) {
+					<decreaseSize>(array, oldLen, newLen)
+				}
+			})")
+			("functionName", functionName)
+			("panic", panicFunction())
+			("fetchLength", arrayLengthFunction(_type))
+			("maxArrayLength", (u256(1) << 64).str())
+			("decreaseSize", decreaseByteArraySizeFunction(_type))
+			("increaseSize", increaseByteArraySizeFunction(_type))
+			.render();
+	});
+}
+
+string YulUtilFunctions::decreaseByteArraySizeFunction(ArrayType const& _type)
+{
+	string functionName = "byte_array_decrease_size_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, oldLen, newLen) {
+				switch lt(newLen, 32)
+				case  0 {
+					let arrayDataStart := <dataPosition>(array)
+					let deleteStart := add(arrayDataStart, div(add(newLen, 31), 32))
+
+					// we have to partially clear last slot that is still used
+					let offset := mod(newLen, 32)
+					if gt(offset, 0) { <partialClearStorageSlot>(sub(deleteStart, 1), offset) }
+
+					<clearStorageRange>(deleteStart, add(arrayDataStart, div(add(oldLen, 31), 32)))
+
+					sstore(array, or(<shl>(1, newLen), 1))
+				}
+				default {
+					switch gt(oldLen, 31)
+					case 0 {
+						let arrayDataStart := <dataPosition>(array)
+						// clear whole old array, as we are transforming to short bytes array
+						<clearStorageRange>(arrayDataStart, add(arrayDataStart, div(add(oldLen, 31), 32)))
+						<transitLongToShort>(array, newLen)
+					}
+					default {
+						<changeLengthShort>(array, sload(array), newLen)
+					}
+				}
+			})")
+			("functionName", functionName)
+			("dataPosition", arrayDataAreaFunction(_type))
+			("partialClearStorageSlot", partialClearStorageSlotFunction())
+			("clearStorageRange", clearStorageRangeFunction(*_type.baseType()))
+			("shl", shiftLeftFunctionDynamic())
+			("transitLongToShort", byteArrayTransitLongToShortFunction(_type))
+			("changeLengthShort", changeLengthOfShortByteArrayFunction(_type))
+			.render();
+	});
+}
+
+string YulUtilFunctions::increaseByteArraySizeFunction(ArrayType const& _type)
+{
+	string functionName = "byte_array_increase_size_to_unpacked_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, oldLen, newLen) {
+				switch lt(oldLen, 32)
+				case 0 {
+					// in this case array stays unpacked, so we just set new length
+					sstore(array, or(<shl>(1, newLen), 1))
+				}
+				default {
+					let data := and(not(0xff), sload(array))
+					switch lt(newLen, 32)
+					case 0 {
+						// we need to copy elements to data area as we changed array from packed to unpacked
+						sstore(<dataPosition>(array), data)
+						sstore(array, or(<shl>(1, newLen), 1))
+					}
+					default {
+						// here array stays packed, we just need to increase length
+						sstore(array, or(<shl>(1, newLen), data))
+					}
+				}
+			})")
+			("functionName", functionName)
+			("dataPosition", arrayDataAreaFunction(_type))
+			("shl", shiftLeftFunctionDynamic())
+			.render();
+	});
+}
+
+string YulUtilFunctions::byteArrayTransitLongToShortFunction(ArrayType const& _type)
+{
+	string functionName = "transit_byte_array_long_to_short_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, len) {
+				// we need to copy elements from old array to new
+				// we want to copy only elements that are part of the array after resizing
+				let mask := <shl>(mul(8, sub(32, len)), <ones>)
+				let dataPos := <dataPosition>(array)
+				let data := and(sload(dataPos), mask)
+				sstore(array, or(data, <shl>(1, len)))
+				sstore(dataPos, 0)
+			})")
+			("functionName", functionName)
+			("dataPosition", arrayDataAreaFunction(_type))
+			("shl", shiftLeftFunctionDynamic())
+			("ones", formatNumber((bigint(1) << 256) - 1))
+			.render();
+	});
+}
+
+string YulUtilFunctions::changeLengthOfShortByteArrayFunction(ArrayType const& _type)
+{
+	string functionName = "change_length_of_short_byte_array_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, data, len) {
+				// we want to save only elements that are part of the array after resizing
+				// others should be set to zero
+				let mask := <shl>(mul(8, sub(32, len)), <ones>)
+				data := and(data, mask)
+				sstore(array, or(data, <shl>(1, len)))
+			})")
+			("functionName", functionName)
+			("shl", shiftLeftFunctionDynamic())
+			("ones", formatNumber((bigint(1) << 256) - 1))
 			.render();
 	});
 }
@@ -1052,32 +1200,26 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 				case 1 {
 					// Here we have a special case where array transitions to shorter than 32
 					// So we need to copy data
-					let copyFromSlot := <dataAreaFunction>(array)
-					data := sload(copyFromSlot)
-					sstore(copyFromSlot, 0)
-					// New length is 31, encoded to 31 * 2 = 62
-					data := or(and(data, not(0xff)), 62)
+					<transitLongToShort>(array, 31)
 				}
 				default {
-					data := sub(data, 2)
 					let newLen := sub(oldLen, 1)
 					switch lt(oldLen, 32)
 					case 1 {
-						// set last element to zero
-						let mask := not(<shl>(mul(8, sub(31, newLen)), 0xff))
-						data := and(data, mask)
+						<changeLengthOfShortByteArray>(array, data, newLen)
 					}
 					default {
 						let slot, offset := <indexAccess>(array, newLen)
 						<setToZero>(slot, offset)
+						sstore(array, sub(data, 2))
 					}
 				}
-				sstore(array, data)
 			})")
 			("functionName", functionName)
 			("panic", panicFunction())
 			("extractByteArrayLength", extractByteArrayLengthFunction())
-			("dataAreaFunction", arrayDataAreaFunction(_type))
+			("transitLongToShort", byteArrayTransitLongToShortFunction(_type))
+			("changeLengthOfShortByteArray", changeLengthOfShortByteArrayFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
 			("setToZero", storageSetToZeroFunction(*_type.baseType()))
 			("shl", shiftLeftFunctionDynamic())

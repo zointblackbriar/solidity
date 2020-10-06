@@ -446,6 +446,30 @@ private:
 	/// signature: (slot) ->
 	std::string clearStorageStructFunction(StructType const& _type);
 
+	/// @returns the name of a function that resizes a storage byte array
+	/// signature: (array, newLen)
+	std::string resizeDynamicByteArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that increases size of byte array
+	/// when we resize byte array from < 32 elements to >= 32 elements or we push to byte array of size 31 copying of data will  occur
+	/// signature: (array, oldLen, newLen)
+	std::string increaseByteArraySizeFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that decreases size of byte array
+	/// when we resize byte array from >= 32 elements to < 32 elements or we pop from byte array of size 32 copying of data will  occur
+	/// signature: (array, oldLen, newLen)
+	std::string decreaseByteArraySizeFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that sets size of short byte array while copying data
+	/// should be called when we resize from long byte array (more than 32 elements) to short byte array
+	/// signature: (array, len)
+	std::string byteArrayTransitLongToShortFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that sets size of short byte array
+	/// should be called when we resize short byte array to a shorter array, or pushing zero value to short array
+	/// signature: (array, data, len)
+	std::string changeLengthOfShortByteArrayFunction(ArrayType const& _type);
+
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
 	MultiUseYulFunctionCollector& m_functionCollector;
