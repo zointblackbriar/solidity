@@ -92,8 +92,7 @@
                 "nodeType": "InlineAssembly",
                 "src": "63:87:1"
               }
-            ],
-            "unchecked": false
+            ]
           },
           "id": 7,
           "implemented": true,

@@ -63,8 +63,7 @@
                 "nodeType": "VariableDeclarationStatement",
                 "src": "35:25:1"
               }
-            ],
-            "unchecked": false
+            ]
           },
           "id": 8,
           "implemented": true,

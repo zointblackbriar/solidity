@@ -32,8 +32,7 @@
             "id": 3,
             "nodeType": "Block",
             "src": "42:5:1",
-            "statements": [],
-            "unchecked": false
+            "statements": []
           },
           "id": 4,
           "implemented": true,
@@ -67,8 +66,7 @@
             "id": 7,
             "nodeType": "Block",
             "src": "78:5:1",
-            "statements": [],
-            "unchecked": false
+            "statements": []
           },
           "id": 8,
           "implemented": true,

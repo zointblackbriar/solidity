@@ -39,8 +39,7 @@
                 "nodeType": "PlaceholderStatement",
                 "src": "26:1:1"
               }
-            ],
-            "unchecked": false
+            ]
           },
           "id": 4,
           "name": "M",

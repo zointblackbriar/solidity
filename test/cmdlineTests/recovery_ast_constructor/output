@@ -105,8 +105,7 @@ JSON AST:
                 "statements":
                 [
                   null
-                ],
-                "unchecked": false
+                ]
               },
               "children": [],
               "id": 8,
@@ -188,10 +187,6 @@ JSON AST:
               "src": "433:6:0"
             },
             {
-              "attributes":
-              {
-                "unchecked": false
-              },
               "children":
               [
                 {

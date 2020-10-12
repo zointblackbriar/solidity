@@ -66,8 +66,7 @@
                 "nodeType": "InlineAssembly",
                 "src": "47:35:1"
               }
-            ],
-            "unchecked": false
+            ]
           },
           "functionSelector": "ece866b9",
           "id": 5,

@@ -87,8 +87,7 @@
                 "nodeType": "ExpressionStatement",
                 "src": "40:3:1"
               }
-            ],
-            "unchecked": false
+            ]
           },
           "id": 11,
           "implemented": true,

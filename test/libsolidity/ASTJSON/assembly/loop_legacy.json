@@ -81,10 +81,6 @@
               "src": "42:0:1"
             },
             {
-              "attributes":
-              {
-                "unchecked": false
-              },
               "children":
               [
                 {
