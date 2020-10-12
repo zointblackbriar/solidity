@@ -2290,9 +2290,9 @@ void ExpressionCompiler::appendExpOperatorCode(Type const& _valueType, Type cons
 
 	if (m_context.arithmetic() == Arithmetic::Checked)
 		m_context.callYulFunction(m_context.utilFunctions().overflowCheckedIntExpFunction(
-				dynamic_cast<IntegerType const&>(_valueType),
-				dynamic_cast<IntegerType const&>(_exponentType)
-			), 2, 1);
+			dynamic_cast<IntegerType const&>(_valueType),
+			dynamic_cast<IntegerType const&>(_exponentType)
+		), 2, 1);
 	else
 		m_context << Instruction::EXP;
 }
