@@ -28,7 +28,12 @@ object "D_11" {
                     {
                         if callvalue() { revert(_2, _2) }
                         if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
-                        if gt(_1, 0xffffffffffffffff) { invalid() }
+                        if gt(_1, 0xffffffffffffffff)
+                        {
+                            mstore(_2, shl(224, 0x4e487b71))
+                            mstore(4, 65)
+                            revert(_2, 0x24)
+                        }
                         mstore(64, _1)
                         return(_1, _2)
                     }
