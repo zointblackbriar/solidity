@@ -16,3 +16,4 @@ contract Simple {
 	}
 }
 // ----
+// Warning 4661: (195-209): BMC: Assertion violation happens here.
