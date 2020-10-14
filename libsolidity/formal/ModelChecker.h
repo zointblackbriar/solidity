@@ -41,6 +41,21 @@ struct SourceLocation;
 namespace solidity::frontend
 {
 
+struct ModelCheckerEngine
+{
+	bool bmc = false;
+	bool chc = false;
+
+	static constexpr ModelCheckerEngine All() { return {true, true}; }
+	static constexpr ModelCheckerEngine BMC() { return {true, false}; }
+	static constexpr ModelCheckerEngine CHC() { return {false, true}; }
+	static constexpr ModelCheckerEngine None() { return {false, false}; }
+
+	bool none() { return !some(); }
+	bool some() { return bmc || chc; }
+	bool all() { return bmc && chc; }
+};
+
 class ModelChecker
 {
 public:
@@ -49,6 +64,7 @@ public:
 	ModelChecker(
 		langutil::ErrorReporter& _errorReporter,
 		std::map<solidity::util::h256, std::string> const& _smtlib2Responses,
+		ModelCheckerEngine _engine = ModelCheckerEngine::All(),
 		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
 		smtutil::SMTSolverChoice _enabledSolvers = smtutil::SMTSolverChoice::All()
 	);
@@ -64,6 +80,8 @@ public:
 	static smtutil::SMTSolverChoice availableSolvers();
 
 private:
+	ModelCheckerEngine m_engine;
+
 	/// Stores the context of the encoding.
 	smt::EncodingContext m_context;
 
