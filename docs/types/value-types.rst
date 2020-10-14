@@ -110,7 +110,7 @@ of arbitrary precision.
   Division by zero causes a failing assert. This check can **not** be disabled through ``unchecked { ... }``.
 
 .. note::
-  Division can result in an overflow for the case of ``type(int).min / (-1)``.
+  The expression ``type(int).min / (-1)`` is the only case where division causes an overflow.
   In checked arithmetic mode, this will cause a failing assertion, while in wrapping
   mode, the value will be ``type(int).min``.
 

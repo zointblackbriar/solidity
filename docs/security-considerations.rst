@@ -263,8 +263,9 @@ The default checked mode will detect overflows and cause a failing assertion. Yo
 using ``unchecked { ... }``, causing the overflow to be silently ignored. The above code would return
 ``0`` if wrapped in ``unchecked { ... }``.
 
-Even in checked mode, please do not rely on these checks, since there are situations where an overflow
-can lead to a contract being stuck.
+Even in checked mode, do not assume you are protected from overflow bugs.
+In this mode, overflows will always revert. If it is not possible to avoid the
+overflow, this can lead to a smart contract being stuck in a certain state.
 
 In general, read about the limits of two's complement representation, which even has some
 more special edge cases for signed numbers.
