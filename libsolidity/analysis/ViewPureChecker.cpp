@@ -195,7 +195,7 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 		{
 		case Type::Category::Contract:
 			solAssert(_identifier.name() == "this" || _identifier.name() == "super", "");
-			if (!dynamic_cast<ContractType const&>(*magicVar->type()).isSuper())
+			if (dynamic_cast<ContractType const*>(magicVar->type()))
 				// reads the address
 				mutability = StateMutability::View;
 			break;
@@ -440,4 +440,3 @@ void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
 	else
 		solAssert(dynamic_cast<ContractDefinition const*>(_modifier.name().annotation().referencedDeclaration), "");
 }
-

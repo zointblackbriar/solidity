@@ -861,17 +861,17 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
 				functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract());
 			}
-			else
-			{
-				ContractType const* type = dynamic_cast<ContractType const*>(memberAccess->expression().annotation().type);
-				if (type && type->isSuper())
+			else if (auto typeType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
+				if (
+					auto contractType = dynamic_cast<ContractType const*>(typeType->actualType());
+					contractType->isSuper()
+				)
 				{
-					ContractDefinition const* super = type->contractDefinition().superContract(m_context.mostDerivedContract());
+					ContractDefinition const* super = contractType->contractDefinition().superContract(m_context.mostDerivedContract());
 					solAssert(super, "Super contract not available.");
 					solAssert(*memberAccess->annotation().requiredLookup == VirtualLookup::Super, "");
 					functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract(), super);
 				}
-			}
 
 			solAssert(functionDef && functionDef->isImplemented(), "");
 		}
@@ -1532,19 +1532,8 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	{
 		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.expression().annotation().type);
 		if (type.isSuper())
-		{
-			solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
-			ContractDefinition const* super = type.contractDefinition().superContract(m_context.mostDerivedContract());
-			solAssert(super, "Super contract not available.");
-			FunctionDefinition const& resolvedFunctionDef = dynamic_cast<FunctionDefinition const&>(
-				*_memberAccess.annotation().referencedDeclaration
-			).resolveVirtual(m_context.mostDerivedContract(), super);
+			solAssert(false, "");
 
-			define(_memberAccess) << to_string(resolvedFunctionDef.id()) << "\n";
-			solAssert(resolvedFunctionDef.functionType(true), "");
-			solAssert(resolvedFunctionDef.functionType(true)->kind() == FunctionType::Kind::Internal, "");
-			m_context.internalFunctionAccessed(_memberAccess, resolvedFunctionDef);
-		}
 		// ordinary contract type
 		else if (Declaration const* declaration = _memberAccess.annotation().referencedDeclaration)
 		{
@@ -1654,7 +1643,9 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "creationCode" || member == "runtimeCode")
 		{
 			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
-			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			auto contractType = dynamic_cast<ContractType const*>(arg);
+			solAssert(!contractType->isSuper(), "");
+			ContractDefinition const& contract = contractType->contractDefinition();
 			m_context.subObjectsCreated().insert(&contract);
 			m_code << Whiskers(R"(
 				let <size> := datasize("<objectName>")
@@ -1674,7 +1665,9 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "interfaceId")
 		{
 			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
-			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			auto contractType = dynamic_cast<ContractType const*>(arg);
+			solAssert(!contractType->isSuper(), "");
+			ContractDefinition const& contract = contractType->contractDefinition();
 			define(_memberAccess) << formatNumber(u256{contract.interfaceId()} << (256 - 32)) << "\n";
 		}
 		else if (member == "min" || member == "max")
@@ -1816,63 +1809,82 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 
 		if (actualType.category() == Type::Category::Contract)
 		{
-			if (auto const* variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
-				handleVariableReference(*variable, _memberAccess);
-			else if (memberFunctionType)
+			ContractType const& contractType = dynamic_cast<ContractType const&>(actualType);
+			if (contractType.isSuper())
 			{
-				switch (memberFunctionType->kind())
-				{
-				case FunctionType::Kind::Declaration:
-					break;
-				case FunctionType::Kind::Internal:
-					if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
-					{
-						define(_memberAccess) << to_string(function->id()) << "\n";
-						m_context.internalFunctionAccessed(_memberAccess, *function);
-					}
-					else
-						solAssert(false, "Function not found in member access");
-					break;
-				case FunctionType::Kind::Event:
-					solAssert(
-						dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration),
-						"Event not found"
-					);
-					// the call will do the resolving
-					break;
-				case FunctionType::Kind::DelegateCall:
-					define(IRVariable(_memberAccess).part("address"), _memberAccess.expression());
-					define(IRVariable(_memberAccess).part("functionSelector")) << formatNumber(memberFunctionType->externalIdentifier()) << "\n";
-					break;
-				case FunctionType::Kind::External:
-				case FunctionType::Kind::Creation:
-				case FunctionType::Kind::Send:
-				case FunctionType::Kind::BareCall:
-				case FunctionType::Kind::BareCallCode:
-				case FunctionType::Kind::BareDelegateCall:
-				case FunctionType::Kind::BareStaticCall:
-				case FunctionType::Kind::Transfer:
-				case FunctionType::Kind::Log0:
-				case FunctionType::Kind::Log1:
-				case FunctionType::Kind::Log2:
-				case FunctionType::Kind::Log3:
-				case FunctionType::Kind::Log4:
-				case FunctionType::Kind::ECRecover:
-				case FunctionType::Kind::SHA256:
-				case FunctionType::Kind::RIPEMD160:
-				default:
-					solAssert(false, "unsupported member function");
-				}
-			}
-			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type))
-			{
-				// no-op
+				solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
+				ContractDefinition const* super = contractType.contractDefinition().superContract(m_context.mostDerivedContract());
+				solAssert(super, "Super contract not available.");
+				FunctionDefinition const& resolvedFunctionDef =
+					dynamic_cast<FunctionDefinition const&>(
+						*_memberAccess.annotation().referencedDeclaration
+					).resolveVirtual(m_context.mostDerivedContract(), super);
+
+				define(_memberAccess) << to_string(resolvedFunctionDef.id()) << "\n";
+				solAssert(resolvedFunctionDef.functionType(true), "");
+				solAssert(resolvedFunctionDef.functionType(true)->kind() == FunctionType::Kind::Internal, "");
+				m_context.internalFunctionAccessed(_memberAccess, resolvedFunctionDef);
 			}
 			else
-				// The old code generator had a generic "else" case here
-				// without any specific code being generated,
-				// but it would still be better to have an exhaustive list.
-				solAssert(false, "");
+			{
+				if (auto const* variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+					handleVariableReference(*variable, _memberAccess);
+				else if (memberFunctionType)
+				{
+					switch (memberFunctionType->kind())
+					{
+					case FunctionType::Kind::Declaration:
+						break;
+					case FunctionType::Kind::Internal:
+						if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+						{
+							define(_memberAccess) << to_string(function->id()) << "\n";
+							m_context.internalFunctionAccessed(_memberAccess, *function);
+						}
+						else
+							solAssert(false, "Function not found in member access");
+						break;
+					case FunctionType::Kind::Event:
+						solAssert(
+							dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration),
+							"Event not found"
+						);
+						// the call will do the resolving
+						break;
+					case FunctionType::Kind::DelegateCall:
+						define(IRVariable(_memberAccess).part("address"), _memberAccess.expression());
+						define(IRVariable(_memberAccess).part("functionSelector")) << formatNumber(memberFunctionType->externalIdentifier()) << "\n";
+						break;
+					case FunctionType::Kind::External:
+					case FunctionType::Kind::Creation:
+					case FunctionType::Kind::Send:
+					case FunctionType::Kind::BareCall:
+					case FunctionType::Kind::BareCallCode:
+					case FunctionType::Kind::BareDelegateCall:
+					case FunctionType::Kind::BareStaticCall:
+					case FunctionType::Kind::Transfer:
+					case FunctionType::Kind::Log0:
+					case FunctionType::Kind::Log1:
+					case FunctionType::Kind::Log2:
+					case FunctionType::Kind::Log3:
+					case FunctionType::Kind::Log4:
+					case FunctionType::Kind::ECRecover:
+					case FunctionType::Kind::SHA256:
+					case FunctionType::Kind::RIPEMD160:
+					default:
+						solAssert(false, "unsupported member function");
+					}
+				}
+				else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type))
+				{
+					// no-op
+				}
+				else
+					// The old code generator had a generic "else" case here
+					// without any specific code being generated,
+					// but it would still be better to have an exhaustive list.
+					solAssert(false, "");
+			}
 		}
 		else if (EnumType const* enumType = dynamic_cast<EnumType const*>(&actualType))
 			define(_memberAccess) << to_string(enumType->memberValue(_memberAccess.memberName())) << "\n";
@@ -2126,18 +2138,20 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		switch (magicVar->type()->category())
 		{
 		case Type::Category::Contract:
-			if (dynamic_cast<ContractType const&>(*magicVar->type()).isSuper())
-				solAssert(_identifier.name() == "super", "");
-			else
-			{
-				solAssert(_identifier.name() == "this", "");
-				define(_identifier) << "address()\n";
-			}
+			solAssert(_identifier.name() == "this", "");
+			define(_identifier) << "address()\n";
 			break;
 		case Type::Category::Integer:
 			solAssert(_identifier.name() == "now", "");
 			define(_identifier) << "timestamp()\n";
 			break;
+		case Type::Category::TypeType:
+			{
+				auto typeType = dynamic_cast<TypeType const*>(magicVar->type());
+				if (auto contractType = dynamic_cast<ContractType const*>(typeType->actualType()))
+					solAssert(!contractType->isSuper() || _identifier.name() == "super", "");
+				break;
+			}
 		default:
 			break;
 		}
