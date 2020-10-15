@@ -49,7 +49,7 @@ access the minimum and maximum value representable by the type.
   There are two modes in which arithmetic is performed on these types: The "wrapping" or "unchecked" mode and the "checked" mode.
   By default, arithmetic is always "checked", which mean that if the result of an operation falls outside the value range
   of the type, the call is reverted through a :ref:`failing assertion<assert-and-require>`. You can switch to "unchecked" mode
-  using ``unchecked { ... }``. More details can be found in the section about <unchecked>.
+  using ``unchecked { ... }``. More details can be found in the section about :ref:`unchecked <unchecked>`.
 
 Comparisons
 ^^^^^^^^^^^
@@ -83,7 +83,7 @@ Addition, subtraction and multiplication have the usual semantics, with two diff
 modes in regard to over- and underflow:
 
 By default, all arithmetic is checked for under- or overflow, but this can be disabled
-using the <unchecked> block, resulting in wrapping arithmetic. More details
+using the :ref:`unchecked block<unchecked>`, resulting in wrapping arithmetic. More details
 can be found in that section.
 
 The expression ``-x`` is equivalent to ``(T(0) - x)`` where
