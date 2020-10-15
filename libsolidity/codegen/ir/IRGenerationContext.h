@@ -132,9 +132,8 @@ public:
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
 
-	void pushArithmetic(Arithmetic _value) { m_arithmetic.push(_value); }
-	void popArithmetic() { m_arithmetic.pop(); }
-	Arithmetic arithmetic() const { return m_arithmetic.empty() ? Arithmetic::Checked : m_arithmetic.top(); }
+	void setArithmetic(Arithmetic _value) { m_arithmetic = _value; }
+	Arithmetic arithmetic() const { return m_arithmetic; }
 
 	ABIFunctions abiFunctions();
 
@@ -166,7 +165,7 @@ private:
 	MultiUseYulFunctionCollector m_functions;
 	size_t m_varCounter = 0;
 	/// Whether to use checked or wrapping arithmetic.
-	std::stack<Arithmetic> m_arithmetic;
+	Arithmetic m_arithmetic = Arithmetic::Checked;
 
 	/// Flag indicating whether any inline assembly block was seen.
 	bool m_inlineAssemblySeen = false;

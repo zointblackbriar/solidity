@@ -477,14 +477,20 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 bool IRGeneratorForStatements::visit(Block const& _block)
 {
 	if (_block.unchecked())
-		m_context.pushArithmetic(Arithmetic::Wrapping);
+	{
+		solAssert(m_context.arithmetic() == Arithmetic::Checked, "");
+		m_context.setArithmetic(Arithmetic::Wrapping);
+	}
 	return true;
 }
 
 void IRGeneratorForStatements::endVisit(Block const& _block)
 {
 	if (_block.unchecked())
-		m_context.popArithmetic();
+	{
+		solAssert(m_context.arithmetic() == Arithmetic::Wrapping, "");
+		m_context.setArithmetic(Arithmetic::Checked);
+	}
 }
 
 bool IRGeneratorForStatements::visit(IfStatement const& _ifStatement)
